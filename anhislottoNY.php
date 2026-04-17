@@ -1571,7 +1571,7 @@ table.skai-table tbody tr:hover{
             <span class="skai-ball skai-ball--main"><?php echo leEscapeAttr(lePad2($p5)); ?></span>
             <?php if ($bonusBall !== '') : ?>
               <span class="skai-ball skai-ball--main" aria-hidden="true">+</span>
-              <span class="skai-ball skai-ball--main" aria-label="Bonus number"><?php echo leEscapeAttr(lePad2($bonusBall)); ?></span>
+              <span class="skai-ball skai-ball--main" aria-label="<?php echo leEscapeAttr('Bonus number ' . lePad2($bonusBall)); ?>"><?php echo leEscapeAttr(lePad2($bonusBall)); ?></span>
             <?php else : ?>
               <span class="skai-ball skai-ball--main"><?php echo leEscapeAttr(lePad2($p6)); ?></span>
             <?php endif; ?>
