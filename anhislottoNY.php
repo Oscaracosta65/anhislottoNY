@@ -2091,7 +2091,7 @@ table.skai-table tbody tr:hover{
     var attempts = 0;
     var maxAttempts = 20;
     var cdnUrl = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
-    var integrity = 'sha384-OLBgp1GsljhM2TJ+sbHjaiH9txEUvgdDTAzHv2P24donTt6/529l+9Ua0vFImLlb';
+    var integrity = 'sha384-9nhczxUqK87bcKHh20fSQcTGD4qq5GhayNYSYWqwBkINBhOfQLg/P5HG5lF1urn4';
 
     function waitForChart() {
       if (window.Chart) {
