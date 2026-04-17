@@ -249,7 +249,7 @@ if (!function_exists('leResolveAnalysisInclude')) {
             '134' => 'anhiscashforlife.php', '114' => 'anhis114.php', 'NY3' => 'anhisNY3.php', 'WA4' => 'anhisWA4.php',
             'IN7' => 'anhisWA4.php', 'IN9' => 'anhisWA4.php', 'MI3' => 'anhisKeno.php', 'WI7' => 'anhisWI8.php', 'WI8' => 'anhisWI8.php',
             'TXG' => 'anhisTXG.php', 'TXH' => 'anhisTXG.php', 'TXF' => 'anhisTXG.php', 'TXI' => 'anhisTXG.php', 'OR4' => 'anhisOR4.php',
-            'FL1' => 'anhislotto.php', 'NY1' => 'anhislottoNY.php', 'IL4' => 'anhisIL4.php', 'AR2' => 'anhisAR2.php', 'KY1' => 'anhisKY1.php',
+            'FL1' => 'anhislotto.php', 'NY1' => 'anhislottoNY.php', 'MOH' => 'anhislottoNY.php', 'MOI' => 'anhislottoNY.php', 'IL4' => 'anhisIL4.php', 'AR2' => 'anhisAR2.php', 'KY1' => 'anhisKY1.php',
             'MT4' => 'anhisMT4.php', 'TX3' => 'anhisTX3.php', 'MD3' => 'anhisMD3.php', '135' => 'anhislottoUSA.php', '128' => 'anhis128.php',
             'WV1' => 'anhisWV1.php', 'DE2' => 'anhisDE2.php', 'RI2' => 'anhisRI2.php', 'FL3' => 'anhisFLFantasy5.php', 'FL7' => 'anhisFL7.php',
             'FL6' => 'anhisFL6.php', 'WI2' => 'anhisWI2.php', 'CO4' => 'anhisCO4.php', 'CO5' => 'anhisCO4.php', 'LA1' => 'anhisLA1.php',

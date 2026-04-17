@@ -1,6 +1,6 @@
 <?php
 /**
- * LottoExpert.net — Results Intelligence Page
+ * LottoExpert.net ï¿½ Results Intelligence Page
  * Joomla 5.1.2 + PHP 8.1.x
  * Game: New York Lotto (NY1)
  */
@@ -18,7 +18,29 @@ $input = $app->input;
 $db    = Factory::getDbo();
 $user  = Factory::getUser();
 
-$gameId = 'NY1';
+$gameId = '';
+if (isset($gId) && is_string($gId)) {
+    $candidateGameId = strtoupper(trim($gId));
+    if ($candidateGameId !== '' && preg_match('/^[A-Z0-9]+$/', $candidateGameId)) {
+        $gameId = $candidateGameId;
+    }
+}
+if ($gameId === '') {
+    $candidateGameId = strtoupper(trim((string) $input->getString('gameId', '')));
+    if ($candidateGameId === '') {
+        $candidateGameId = strtoupper(trim((string) $input->getString('game_id', '')));
+    }
+    if ($candidateGameId === '') {
+        $candidateGameId = strtoupper(trim((string) $input->getString('gmCode', '')));
+    }
+    if ($candidateGameId !== '' && preg_match('/^[A-Z0-9]+$/', $candidateGameId)) {
+        $gameId = $candidateGameId;
+    }
+}
+if ($gameId === '') {
+    $gameId = 'NY1';
+}
+$isMoiBonusGame = ($gameId === 'MOI');
 
 /**
  * --------------------------------------------------------------------------
@@ -32,7 +54,7 @@ $doc->addCustomTag('<link rel="alternate" hreflang="en" href="' . htmlspecialcha
 $doc->addCustomTag('<link rel="alternate" hreflang="x-default" href="' . htmlspecialchars($canonicalNoQuery, ENT_QUOTES, 'UTF-8') . '" />');
 
 if (isset($stateName, $gName) && $stateName !== '' && $gName !== '') {
-    $doc->setTitle('Results Intelligence — ' . $stateName . ' • ' . $gName . ' | LottoExpert.net');
+    $doc->setTitle('Results Intelligence ï¿½ ' . $stateName . ' ï¿½ ' . $gName . ' | LottoExpert.net');
 }
 
 /**
@@ -85,12 +107,12 @@ function leFmtDate(?string $date): string
 function leFmtDateLong(?string $date): string
 {
     if (!$date) {
-        return '—';
+        return 'ï¿½';
     }
 
     $ts = strtotime($date);
 
-    return ($ts === false) ? '—' : date('F j, Y', $ts);
+    return ($ts === false) ? 'ï¿½' : date('F j, Y', $ts);
 }
 
 function lePad2(string $value): string
@@ -208,7 +230,7 @@ function leCommaList(array $items): string
     }));
 
     if (empty($items)) {
-        return '—';
+        return 'ï¿½';
     }
 
     return implode(', ', $items);
@@ -251,7 +273,8 @@ function leGetPreviousOccurrenceDate(
     string $dbCol,
     string $gameId,
     string $drawDate,
-    string $ball
+    string $ball,
+    bool $isBonus = false
 ): ?string {
     if ($ball === '') {
         return null;
@@ -261,8 +284,12 @@ function leGetPreviousOccurrenceDate(
         ->select('MAX(' . $db->quoteName('draw_date') . ')')
         ->from($db->quoteName($dbCol))
         ->where($db->quoteName('game_id') . ' = ' . $db->quote($gameId))
-        ->where($db->quoteName('draw_date') . ' < ' . $db->quote($drawDate))
-        ->where(
+        ->where($db->quoteName('draw_date') . ' < ' . $db->quote($drawDate));
+
+    if ($isBonus) {
+        $query->where($db->quoteName('sixth') . ' = ' . $db->quote($ball));
+    } else {
+        $query->where(
             '(' .
             $db->quoteName('first') . ' = ' . $db->quote($ball) . ' OR ' .
             $db->quoteName('second') . ' = ' . $db->quote($ball) . ' OR ' .
@@ -272,6 +299,7 @@ function leGetPreviousOccurrenceDate(
             $db->quoteName('sixth') . ' = ' . $db->quote($ball) .
             ')'
         );
+    }
 
     $db->setQuery($query);
     $result = $db->loadResult();
@@ -347,21 +375,21 @@ $p4 = $lr ? trim((string) ($lr['fourth'] ?? '')) : '';
 $p5 = $lr ? trim((string) ($lr['fifth'] ?? '')) : '';
 $p6 = $lr ? trim((string) ($lr['sixth'] ?? '')) : '';
 
-$latestBalls = [$p1, $p2, $p3, $p4, $p5, $p6];
+$latestBalls = $isMoiBonusGame ? [$p1, $p2, $p3, $p4, $p5] : [$p1, $p2, $p3, $p4, $p5, $p6];
+$bonusBall = $isMoiBonusGame ? $p6 : '';
 $logo = (isset($stateAbrev, $gName)) ? leResolveLogo((string) $stateAbrev, (string) $gName) : ['exists' => false, 'url' => ''];
 
 $rowsMain = leFetchRecentDraws($db, (string) $dbCol, $gameId, $nodCurrentMain);
 [$mainCounts, $mainLastSeenIndex] = leInitRange(1, 59);
+$analysisColumns = $isMoiBonusGame
+    ? ['first', 'second', 'third', 'fourth', 'fifth']
+    : ['first', 'second', 'third', 'fourth', 'fifth', 'sixth'];
 
 foreach ($rowsMain as $idx => $row) {
-    $balls = [
-        trim((string) ($row['first'] ?? '')),
-        trim((string) ($row['second'] ?? '')),
-        trim((string) ($row['third'] ?? '')),
-        trim((string) ($row['fourth'] ?? '')),
-        trim((string) ($row['fifth'] ?? '')),
-        trim((string) ($row['sixth'] ?? '')),
-    ];
+    $balls = [];
+    foreach ($analysisColumns as $col) {
+        $balls[] = trim((string) ($row[$col] ?? ''));
+    }
 
     foreach ($balls as $ball) {
         if ($ball === '' || !isset($mainCounts[$ball])) {
@@ -425,7 +453,7 @@ $window300 = leFetchRecentDraws($db, (string) $dbCol, $gameId, 300);
 [$counts300, ] = leInitRange(1, 59);
 
 foreach ($window50 as $row) {
-    foreach (['first', 'second', 'third', 'fourth', 'fifth', 'sixth'] as $col) {
+    foreach ($analysisColumns as $col) {
         $ball = trim((string) ($row[$col] ?? ''));
         if ($ball !== '' && isset($counts50[$ball])) {
             $counts50[$ball]++;
@@ -434,7 +462,7 @@ foreach ($window50 as $row) {
 }
 
 foreach ($window300 as $row) {
-    foreach (['first', 'second', 'third', 'fourth', 'fifth', 'sixth'] as $col) {
+    foreach ($analysisColumns as $col) {
         $ball = trim((string) ($row[$col] ?? ''));
         if ($ball !== '' && isset($counts300[$ball])) {
             $counts300[$ball]++;
@@ -477,13 +505,22 @@ $drawHistoryRows = [];
 
 if ($drawDate !== '') {
     foreach ($latestBalls as $ball) {
-        $prevDate = leGetPreviousOccurrenceDate($db, (string) $dbCol, $gameId, $drawDate, $ball);
+        $prevDate = leGetPreviousOccurrenceDate($db, (string) $dbCol, $gameId, $drawDate, $ball, false);
         $drawsAgo = leGetDrawingsSinceDate($db, (string) $dbCol, $gameId, $prevDate, $drawDate);
 
         $drawHistoryRows[] = [
             'label'    => lePad2($ball),
             'prevDate' => $prevDate,
             'drawsAgo' => $drawsAgo,
+        ];
+    }
+    if ($bonusBall !== '') {
+        $prevBonusDate = leGetPreviousOccurrenceDate($db, (string) $dbCol, $gameId, $drawDate, $bonusBall, true);
+        $bonusDrawsAgo = leGetDrawingsSinceDate($db, (string) $dbCol, $gameId, $prevBonusDate, $drawDate);
+        $drawHistoryRows[] = [
+            'label'    => 'Bonus ' . lePad2($bonusBall),
+            'prevDate' => $prevBonusDate,
+            'drawsAgo' => $bonusDrawsAgo,
         ];
     }
 }
@@ -519,11 +556,11 @@ $archivesUrl = leBuildRouteWithParams('/lottery-archives-pick6', [
     'sTn'       => $stateAbrevLower,
 ]);
 
-$skaiAnalysisUrl = '/picking-winning-numbers/artificial-intelligence/skai-lottery-prediction?gameId=NY1';
-$aiPredictionsUrl = '/picking-winning-numbers/artificial-intelligence/ai-powered-predictions?game_id=NY1';
-$skipHitUrl = '/picking-winning-numbers/artificial-intelligence/skip-and-hit-analysis?game_id=NY1';
-$mcmcUrl = '/picking-winning-numbers/artificial-intelligence/markov-chain-monte-carlo-mcmc-analysis?game_id=NY1';
-$allHeatmapUrl = '/all-lottery-heatmaps?gameId=NY1';
+$skaiAnalysisUrl = '/picking-winning-numbers/artificial-intelligence/skai-lottery-prediction?gameId=' . rawurlencode($gameId);
+$aiPredictionsUrl = '/picking-winning-numbers/artificial-intelligence/ai-powered-predictions?game_id=' . rawurlencode($gameId);
+$skipHitUrl = '/picking-winning-numbers/artificial-intelligence/skip-and-hit-analysis?game_id=' . rawurlencode($gameId);
+$mcmcUrl = '/picking-winning-numbers/artificial-intelligence/markov-chain-monte-carlo-mcmc-analysis?game_id=' . rawurlencode($gameId);
+$allHeatmapUrl = '/all-lottery-heatmaps?gameId=' . rawurlencode($gameId);
 ?>
 <style>
 :root{
@@ -1532,7 +1569,12 @@ table.skai-table tbody tr:hover{
             <span class="skai-ball skai-ball--main"><?php echo leEscapeAttr(lePad2($p3)); ?></span>
             <span class="skai-ball skai-ball--main"><?php echo leEscapeAttr(lePad2($p4)); ?></span>
             <span class="skai-ball skai-ball--main"><?php echo leEscapeAttr(lePad2($p5)); ?></span>
-            <span class="skai-ball skai-ball--main"><?php echo leEscapeAttr(lePad2($p6)); ?></span>
+            <?php if ($bonusBall !== '') : ?>
+              <span class="skai-ball skai-ball--main">+</span>
+              <span class="skai-ball skai-ball--main"><?php echo leEscapeAttr(lePad2($bonusBall)); ?></span>
+            <?php else : ?>
+              <span class="skai-ball skai-ball--main"><?php echo leEscapeAttr(lePad2($p6)); ?></span>
+            <?php endif; ?>
           </div>
 
           <div class="skai-hero-actions" aria-label="Primary actions">
@@ -1705,7 +1747,7 @@ table.skai-table tbody tr:hover{
                     <?php endif; ?>
                   </div>
                   <div class="skai-history-badge">
-                    <?php echo ($row['drawsAgo'] !== null) ? (int) $row['drawsAgo'] . ' drws ago' : '—'; ?>
+                    <?php echo ($row['drawsAgo'] !== null) ? (int) $row['drawsAgo'] . ' drws ago' : 'ï¿½'; ?>
                   </div>
                 </div>
               <?php endforeach; ?>
@@ -1790,14 +1832,20 @@ table.skai-table tbody tr:hover{
             <div class="skai-card-body">
               <div class="skai-note" style="margin-top:0;">
                 Latest verified draw:
-                <strong><?php echo leEscapeAttr(leCommaList([
+                <strong><?php if ($bonusBall !== '') : ?><?php echo leEscapeAttr(leCommaList([
+                    lePad2($p1),
+                    lePad2($p2),
+                    lePad2($p3),
+                    lePad2($p4),
+                    lePad2($p5),
+                ])); ?> + Bonus <?php echo leEscapeAttr(lePad2($bonusBall)); ?><?php else : ?><?php echo leEscapeAttr(leCommaList([
                     lePad2($p1),
                     lePad2($p2),
                     lePad2($p3),
                     lePad2($p4),
                     lePad2($p5),
                     lePad2($p6),
-                ])); ?></strong>.
+                ])); ?><?php endif; ?></strong>.
                 Use this page to compare how those values relate to the broader frequency and spacing landscape before going deeper into SKAI and companion tools.
               </div>
             </div>
